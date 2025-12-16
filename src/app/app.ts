@@ -1,86 +1,83 @@
-import { Component, OnInit, signal, effect } from '@angular/core';
+import { Component, OnInit, signal, effect, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-
+// FIX: Changed path to match your actual file location
+import { GeminiAiService } from './services/gemini-ai';
 
 interface Todo {
   id: number;
   text: string;
   done: boolean;
+  duration?: string;
 }
 
 @Component({
   selector: 'app-root',
+  standalone: true,
   imports: [FormsModule],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
 export class App implements OnInit {
+  // FIX: Inject the service securely
+  private aiService = inject(GeminiAiService);
+
+  protected readonly storageKey = 'minimal-todos';
+  protected draftText = '';
+  protected todos = signal<Todo[]>([]);
 
   constructor() {
-    // Set up an effect to auto-persist todos whenever they change.
     effect(() => {
       localStorage.setItem(this.storageKey, JSON.stringify(this.todos()));
     });
   }
-  // Key used to persist todos in localStorage so reads/writes stay consistent.
-  protected readonly storageKey = 'minimal-todos';
 
-  // Two-way bound input value for the text field.
-  protected draftText = '';
-
-  // Signal holding the array of todo items for reactive updates.
-  protected todos = signal<Todo[]>([]);
-
-  // Load any persisted todos as soon as the component initializes, then set up auto-save.
   public ngOnInit(): void {
     this.loadTodosFromStorage();
   }
 
-  // Add a new todo using the current draft text, then reset the input.
-  protected addTodo(): void {
+  // Consolidated Add Method
+  async addTodo() {
     const text = this.draftText.trim();
-    if (!text) {
-      return; // Ignore empty submissions to keep the list clean.
-    }
+    if (!text) return;
 
-    // Simple id using timestamp to avoid collisions in this demo.
-    const nextTodo = { id: Date.now(), text, done: false };
-    this.todos.update((current) => [...current, nextTodo]);
+    // 1. Create todo with loading state
+    const newTodo: Todo = {
+      id: Date.now(),
+      text,
+      done: false,
+      duration: '...'
+    };
+
+    // 2. Update signal
+    this.todos.update((current) => [...current, newTodo]);
     this.draftText = '';
-    
-  }
 
-  // Toggle completion state for a single todo item.
-  protected toggleTodo(id: number): void {
+    // 3. Call AI
+    const timeEstimate = await this.aiService.estimateDuration(text);
+
+    // 4. Update the duration when AI finishes
     this.todos.update((current) =>
-      current.map((todo) => {
-      if (todo.id === id) {
-        return { ...todo, done: !todo.done };
-      }
-      return todo;
-      })
+      current.map(t => t.id === newTodo.id ? { ...t, duration: timeEstimate } : t)
     );
   }
 
-  // Remove one todo by id so the list stays tidy.
+  protected toggleTodo(id: number): void {
+    this.todos.update((current) =>
+      current.map((todo) => todo.id === id ? { ...todo, done: !todo.done } : todo)
+    );
+  }
+
   protected removeTodo(id: number): void {
     this.todos.update((current) => current.filter((todo) => todo.id !== id));
   }
 
-  // Retrieve persisted todos from localStorage, safely handling bad data.
   private loadTodosFromStorage(): void {
     const raw = localStorage.getItem(this.storageKey);
-    if (!raw) {
-      return;
-    }
-
+    if (!raw) return;
     try {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) {
-        this.todos.set(parsed);
-      }
+      if (Array.isArray(parsed)) this.todos.set(parsed);
     } catch {
-      // Ignore malformed storage; start fresh without crashing.
       this.todos.set([]);
     }
   }

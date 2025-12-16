@@ -1,12 +1,10 @@
 <main class="shell">
-  <!-- Simple header to explain the page purpose. -->
   <header class="hero">
     <p class="eyebrow">Slim todo</p>
     <h1>Today&apos;s focus</h1>
     <p class="lede">Keep a tiny list, keep it close, store it locally.</p>
   </header>
 
-  <!-- Form submits to addTodo; ngModel keeps input and class property in sync. -->
   <form class="todo-form" (ngSubmit)="addTodo()">
     <input
       class="todo-input"
@@ -19,12 +17,10 @@
     <button class="primary" type="submit">Add</button>
   </form>
 
-  <!-- Empty state reminder when no todos exist. -->
   @if (todos().length === 0) {
     <p class="empty">Nothing here yet—type above and press Add.</p>
   }
 
-  <!-- List of todos with checkboxes and delete buttons. -->
   @if (todos().length > 0) {
     <ul class="todo-list">
       @for (todo of todos(); track todo.id) {
@@ -35,8 +31,17 @@
               [checked]="todo.done"
               (change)="toggleTodo(todo.id)"
             />
-            <span>{{ todo.text }}</span>
+
+            <span class="me-2">{{ todo.text }}</span>
+
+            @if (todo.duration) {
+              <span class="badge rounded-pill text-bg-secondary"
+                    style="font-size: 0.75rem; vertical-align: middle; margin-left: 8px;">
+                {{ todo.duration }}
+              </span>
+            }
           </label>
+
           <button class="ghost" type="button" (click)="removeTodo(todo.id)">
             Remove
           </button>
