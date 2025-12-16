@@ -36,6 +36,18 @@
               (change)="toggleTodo(todo.id)"
             />
             <span>{{ todo.text }}</span>
+            @if (todo.analyzing) {
+              <span class="llm-text analyzing">Analyseren...</span>
+            } @else if (todo.urgencyBadge) {
+              <span class="llm-text" [class.badge-low]="todo.urgencyBadge === 'LOW'" 
+                    [class.badge-medium]="todo.urgencyBadge === 'MEDIUM'"
+                    [class.badge-high]="todo.urgencyBadge === 'HIGH'">
+                {{ todo.urgencyBadge }}
+                @if (todo.durationMinutes) {
+                  <span class="duration"> · {{ todo.durationMinutes }} min</span>
+                }
+              </span>
+            }
           </label>
           <button class="ghost" type="button" (click)="removeTodo(todo.id)">
             Remove

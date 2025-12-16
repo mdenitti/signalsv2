@@ -165,3 +165,39 @@ h1 {
 .link:hover {
 	text-decoration: underline;
 }
+
+.llm-text {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.analyzing {
+  background: #e0e7ff;
+  color: #4338ca;
+}
+
+.badge-low {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.badge-medium {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.badge-high {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.duration {
+  font-size: 10px;
+  opacity: 0.8;
+  text-transform: none;
+}
+
